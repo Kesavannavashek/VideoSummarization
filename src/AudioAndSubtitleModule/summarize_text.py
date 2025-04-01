@@ -15,25 +15,25 @@ model = PegasusForConditionalGeneration.from_pretrained("google/pegasus-xsum")
 print("after")
 print(len(chunks))
 
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
 final_summary = ""
 for chunk in chunks:
     print("Input Chunk:", chunk)
 
-    # Pegasus doesn't require task prefixes - just pass raw text
     inputs = tokenizer(
         chunk,
-        max_length=1024,  # Pegasus handles longer inputs
+        max_length=1024,
         truncation=True,
         return_tensors="pt"
     ).to(device)
 
-    # Generate summary with appropriate parameters
     summary_ids = model.generate(
         inputs.input_ids,
-        max_length=150,  # More concise than T5/BART
+        max_length=150,
         min_length=50,
-        length_penalty=2.0,  # Favor longer summaries (2.0) or shorter (0.5)
-        num_beams=8,  # Better results with more beams
+        length_penalty=2.0,
+        num_beams=8,
         early_stopping=True
     )
 
