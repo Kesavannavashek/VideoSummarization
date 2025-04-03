@@ -1,4 +1,6 @@
 import yt_dlp
+import textwrap
+
 
 def get_video_url(youtube_url):
     ydl_opts = {
@@ -15,3 +17,7 @@ def get_video_url(youtube_url):
 video_info = get_video_url("https://youtu.be/ldYLYRNaucM?feature=shared")
 video_url = video_info['url']
 video_title = video_info['title']
+print("Video Title: ",video_title)
+# print("Video URL: ",video_url)
+video_url = textwrap.fill(video_url, width=70)
+print("Video URL: ",video_url)
