@@ -3,7 +3,7 @@ import easyocr
 from extract_yt_link import video_url
 import time
 
-
+#vanakkam da maple
 reader = easyocr.Reader(['en'])
 
 cap = cv2.VideoCapture(video_url)
