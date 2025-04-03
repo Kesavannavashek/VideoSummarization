@@ -5,7 +5,7 @@ from pydub import AudioSegment
 import textwrap
 
 
-youtube_url = "https://youtu.be/nz4j4lNHhkE?si=MYAN-HSGR_VSltCs"
+youtube_url = "https://youtu.be/oO8w6XcXJUs?si=duhKfePkQ8jHFhQA"
 
 
 audio_filename = "audio.mp3"

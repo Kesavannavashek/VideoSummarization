@@ -23,8 +23,6 @@ else:
 
 subtitle_data = json.loads(subtitle_content)
 
-# print(subtitle_data)
-
 def extract_subtitle_text(subtitle_data):
     parsed_text = ""
 
