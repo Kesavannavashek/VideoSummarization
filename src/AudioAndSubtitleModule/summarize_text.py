@@ -1,6 +1,6 @@
 # import torch.cuda
 # from transformers import T5ForConditionalGeneration, T5Tokenizer
-# from extract_video_info import chunks
+from extract_video_info import chunks
 # from transformers import BartForConditionalGeneration, BartTokenizer
 # from transformers import PegasusTokenizer, PegasusForConditionalGeneration
 #
@@ -45,52 +45,46 @@
 # print("Final Summary:", final_summary)
 
 import torch
-from transformers import T5ForConditionalGeneration, T5Tokenizer
-from transformers import BartForConditionalGeneration, BartTokenizer
-from transformers import PegasusForConditionalGeneration, PegasusTokenizer
-from extract_video_info import chunks  # Ensure chunks contain the video transcript
+from transformers import T5Tokenizer, T5ForConditionalGeneration
 
-# Choose a model: T5, BART, or Pegasus
-MODEL_NAME = "facebook/bart-large-cnn"  # Options: "t5-base", "google/pegasus-xsum"
+# Your subtitle/transcript chunks
+chunks = [
+    "In today's episode, we're diving deep into the world of artificial intelligence. "
+    "We'll explore how AI is shaping industries and changing lives.",
+    "Next, we discuss the ethical implications of AI and what researchers are doing to ensure fairness and transparency.",
+    # Add more...
+]
 
-device = "cuda" if torch.cuda.is_available() else "cpu"
+# Load FLAN-T5 model and tokenizer
+model_name = "google/flan-t5-xl"
+tokenizer = T5Tokenizer.from_pretrained(model_name)
+model = T5ForConditionalGeneration.from_pretrained(model_name)
 
-if "t5" in MODEL_NAME:
-    tokenizer = T5Tokenizer.from_pretrained(MODEL_NAME, legacy=False)
-    model = T5ForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
-    add_prefix = True
-elif "bart" in MODEL_NAME:
-    tokenizer = BartTokenizer.from_pretrained(MODEL_NAME)
-    model = BartForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
-    add_prefix = False
-elif "pegasus" in MODEL_NAME:
-    tokenizer = PegasusTokenizer.from_pretrained(MODEL_NAME)
-    model = PegasusForConditionalGeneration.from_pretrained(MODEL_NAME).to(device)
-    add_prefix = False
-else:
-    raise ValueError("Invalid model choice!")
+# Device setup
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = model.to(device)
 
+# Summarize each chunk
 final_summary = ""
+for i, chunk in enumerate(chunks):
+    print(f"\n🔹 Chunk {i+1}: {chunk[:100]}...")
 
-for chunk in chunks:
-    print("Processing Chunk:", chunk[:100])  # Show first 100 characters for debugging
+    prompt = f"Summarize the following dialogue: {chunk}"
 
-    input_text = "summarize: " + chunk if add_prefix else chunk
-
-    inputs = tokenizer(input_text, max_length=1024, truncation=True, return_tensors="pt").to(device)
+    inputs = tokenizer(prompt, return_tensors="pt", max_length=1024, truncation=True).to(device)
 
     summary_ids = model.generate(
         inputs.input_ids,
         max_length=150,
-        min_length=50,
-        length_penalty=1.0,
+        min_length=40,
         num_beams=4,
-        early_stopping=False
+        length_penalty=1.2,
+        early_stopping=True
     )
 
     summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
-    print("Summary:", summary)
+    print(f"✅ Summary {i+1}: {summary}")
     final_summary += summary + "\n"
 
-print("\nFinal Summary:\n", final_summary)
-
+print("\n🔸 Final Combined Summary 🔸")
+print(final_summary)
