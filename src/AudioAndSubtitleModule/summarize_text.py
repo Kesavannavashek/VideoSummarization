@@ -45,20 +45,19 @@ from extract_video_info import chunks
 # print("Final Summary:", final_summary)
 
 import torch
-from transformers import T5Tokenizer, T5ForConditionalGeneration
+from transformers import BartTokenizer, BartForConditionalGeneration
 
 # Your subtitle/transcript chunks
-chunks = [
-    "In today's episode, we're diving deep into the world of artificial intelligence. "
-    "We'll explore how AI is shaping industries and changing lives.",
-    "Next, we discuss the ethical implications of AI and what researchers are doing to ensure fairness and transparency.",
-    # Add more...
-]
+# chunks = [
+#     "In today's episode, we're diving deep into the world of artificial intelligence. "
+#     "We'll explore how AI is shaping industries and changing lives.",
+#     "Next, we discuss the ethical implications of AI and what researchers are doing to ensure fairness and transparency.",
+# ]
 
-# Load FLAN-T5 model and tokenizer
-model_name = "google/flan-t5-xl"
-tokenizer = T5Tokenizer.from_pretrained(model_name)
-model = T5ForConditionalGeneration.from_pretrained(model_name)
+# Load DistilBART model and tokenizer
+model_name = "sshleifer/distilbart-cnn-12-6"
+tokenizer = BartTokenizer.from_pretrained(model_name)
+model = BartForConditionalGeneration.from_pretrained(model_name)
 
 # Device setup
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -69,16 +68,14 @@ final_summary = ""
 for i, chunk in enumerate(chunks):
     print(f"\n🔹 Chunk {i+1}: {chunk[:100]}...")
 
-    prompt = f"Summarize the following dialogue: {chunk}"
-
-    inputs = tokenizer(prompt, return_tensors="pt", max_length=1024, truncation=True).to(device)
+    inputs = tokenizer(chunk, return_tensors="pt", max_length=1024, truncation=True).to(device)
 
     summary_ids = model.generate(
-        inputs.input_ids,
-        max_length=150,
-        min_length=40,
+        inputs["input_ids"],
+        max_length=130,
+        min_length=30,
         num_beams=4,
-        length_penalty=1.2,
+        length_penalty=2.0,
         early_stopping=True
     )
 
