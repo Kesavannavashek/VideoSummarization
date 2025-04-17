@@ -19,7 +19,7 @@ video_info = get_video_url("https://youtu.be/HM_O0A4Xeb4?si=bDJwKzmIFFBzgJrV")
 video_url = video_info['url']
 video_title = video_info['title']
 print(video_url)
-print("Video Title: ",video_title)
+# print("Video Title: ",video_title)
+# # print("Video URL: ",video_url)
+# video_url = textwrap.fill(video_url, width=70)
 # print("Video URL: ",video_url)
-video_url = textwrap.fill(video_url, width=70)
-print("Video URL: ",video_url)

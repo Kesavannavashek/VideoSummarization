@@ -1,10 +1,13 @@
 import cv2
-import easyocr
+from paddleocr import PaddleOCR
+import paddle
+import numpy as np
 from extract_yt_link import video_url
-import time
+print(paddle.device.get_device())
+# Load GPU-based OCR model
+ocr = PaddleOCR(use_angle_cls=True, lang='en')
 
-reader = easyocr.Reader(['en'])
-
+# Simulate your OpenCV video pipeline
 cap = cv2.VideoCapture(video_url)
 
 while cap.isOpened():
@@ -12,24 +15,23 @@ while cap.isOpened():
     if not ret:
         break
 
-    start_time = time.time()
-    results = reader.readtext(frame)
-    end_time = time.time()
-    print("Time Taken: ",end_time-start_time)
+    # Convert BGR (OpenCV) to RGB (OCR expects RGB)
+    rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    for (bbox, text, prob) in results:
-        (top_left, top_right, bottom_right, bottom_left) = bbox
-        top_left = tuple(map(int, top_left))
-        bottom_right = tuple(map(int, bottom_right))
+    # PaddleOCR works with image paths or numpy arrays
+    result = ocr.ocr(rgb_frame, cls=True)
 
-        cv2.rectangle(frame, top_left, bottom_right, (0, 255, 0), 2)
-        cv2.putText(frame, text, top_left, cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 255), 2)
+    # Optional: Draw results on frame
+    for line in result[0]:
+        text = line[1][0]
+        box = np.array(line[0]).astype(np.int32)
+        cv2.polylines(frame, [box], True, (0, 255, 0), 2)
+        cv2.putText(frame, text, tuple(box[0]), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 0, 0), 1)
 
-
-    # cv2.imshow("Text Detection", frame)
-    if cv2.waitKey(1) & 0xFF == ord("q"):  # Press 'q' to quit
+    # Show frame (or save to video)
+    cv2.imshow('OCR Output', frame)
+    if cv2.waitKey(1) & 0xFF == ord('q'):
         break
-
 
 cap.release()
 cv2.destroyAllWindows()

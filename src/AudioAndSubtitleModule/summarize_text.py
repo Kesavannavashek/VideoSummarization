@@ -89,50 +89,48 @@ from extract_video_info import chunks
 
 
 
+from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, pipeline
 
-# Your chosen model (can also try: "meta-llama/Llama-2-7b-chat-hf", "tiiuae/falcon-7b-instruct", etc.)
-model_id = "mistralai/Mistral-7B-Instruct-v0.1"
+# Model ID
+model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
 
-# Load tokenizer and model
+# Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_id)
+
+# Load model with optimizations for 3050 Ti
 model = AutoModelForCausalLM.from_pretrained(
     model_id,
-    device_map="auto",  # Automatically uses GPU if available
-    torch_dtype=torch.float16  # Efficient on GPU
+    torch_dtype=torch.float16,
+    device_map="auto"
 )
 
-# Create pipeline
-summarizer = pipeline("text-generation", model=model, tokenizer=tokenizer)
-
-# Example text chunks (from subtitles, OCR, or ASR)
+# # Sample chunks (replace with actual subtitle text)
 # chunks = [
-#     "Today we explore how artificial intelligence is changing education. From virtual tutors to smart content generation, AI is making learning more personalized.",
-#     "However, there are concerns over student data privacy, ethical implications of AI-based assessments, and the need for transparent systems."
+#     "Artificial Intelligence is transforming education with virtual tutors and personalized learning.",
+#     "Despite its benefits, AI raises concerns about student data privacy and fairness in assessment."
 # ]
 
-final_summary = ""
+# Prompt template
+def format_prompt(text):
+    return f"<|user|>\nsummarize the following youtube:\n\n{text}\n<|assistant|>\n"
 
+# Process chunks
 for idx, chunk in enumerate(chunks):
-    print(f"\n🔹 Chunk {idx+1}: {chunk[:80]}...")
+    prompt = format_prompt(chunk)
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
 
-    # Prompt engineering for better LLM output
-    prompt = f"Summarize the following passage:\n{chunk}\nSummary:"
+    with torch.no_grad():
+        outputs = model.generate(
+            inputs["input_ids"],
+            max_new_tokens=100,
+            temperature=0.7,
+            top_p=0.95,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id
+        )
 
-    response = summarizer(
-        prompt,
-        max_new_tokens=150,
-        do_sample=True,
-        temperature=0.7,
-        top_k=50,
-        num_return_sequences=1
-    )
+    summary = tokenizer.decode(outputs[0], skip_special_tokens=True)
+    print(f"\n🔹 Summary {idx + 1}:\n{summary.split('<|assistant|>')[-1].strip()}")
 
-    summary = response[0]["generated_text"].split("Summary:")[-1].strip()
-    print(f"✅ Summary {idx+1}: {summary}")
-    final_summary += summary + "\n"
-
-print("\n🔸 Final Combined Summary 🔸\n")
-print(final_summary)
 

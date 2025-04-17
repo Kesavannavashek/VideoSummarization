@@ -1,7 +1,7 @@
 from extract_yt_link import video_url
 import cv2
 from ultralytics import YOLO
-import pytesseract
+# import pytesseract
 import subprocess
 import numpy as np
 import json
