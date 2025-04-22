@@ -1,6 +1,7 @@
-import yt_dlp
-import requests
 import json
+
+import requests
+import yt_dlp
 
 video_url = "https://youtu.be/ldYLYRNaucM?feature=shared"
 
